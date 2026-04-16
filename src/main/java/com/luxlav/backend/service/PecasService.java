@@ -42,6 +42,15 @@ public class PecasService {
                 });
     }
 
+    public Optional<PecasDTO> buscarPecaPorId(UUID id) {
+        return pecasRepository.findById(id)
+                .map(p -> new PecasDTO(
+                        p.getId(),
+                        p.getNome(),
+                        p.getAtivo()!= null && p.getAtivo()
+                ));
+    }
+
     public Optional<PecasModel> atualizarStatus(UUID id, PecasDTO pecasDTO) {
         return pecasRepository.findById(id)
                 .map(pecasModel -> {

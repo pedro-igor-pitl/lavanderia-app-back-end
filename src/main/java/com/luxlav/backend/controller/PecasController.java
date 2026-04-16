@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/pecas")
 public class PecasController {
@@ -22,6 +23,13 @@ public class PecasController {
     public ResponseEntity<PecasModel> cadastrar(@RequestBody PecasDTO pecasDTO) {
         PecasModel pecasModel = pecasService.criarPeca(pecasDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(pecasModel);
+    }
+
+    @GetMapping("/buscarPeca/{id}")
+    public ResponseEntity<PecasDTO> buscarPecaPorId(@PathVariable UUID id) {
+        return pecasService.buscarPecaPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/listar")
