@@ -5,4 +5,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface PecasRepository extends JpaRepository<PecasModel, UUID> {}
+public interface ClienteRepository extends JpaRepository<PecasModel, UUID> {}
