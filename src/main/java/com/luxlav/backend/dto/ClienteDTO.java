@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -16,5 +18,8 @@ public class ClienteDTO {
     private String email;
     private String telefone;
     private TipoCliente tipoCliente;
+    private BigDecimal valorKg;
     private Boolean ativo;
+
+    private List<ClientePecaDTO> pecas;
 }
