@@ -23,7 +23,7 @@ public class ClienteService {
     @Autowired
     private PecasRepository pecasRepository;
 
-    public ClientesModel criarCliente(ClienteDTO clienteDTO) {
+    public ClienteDTO criarCliente(ClienteDTO clienteDTO) {
 
         ClientesModel clientesModel = new ClientesModel();
 
@@ -33,7 +33,6 @@ public class ClienteService {
         clientesModel.setTipoCliente(clienteDTO.getTipoCliente());
         clientesModel.setAtivo(true);
 
-        // REGRA: PESO
         if (clienteDTO.getTipoCliente() == TipoCliente.PESO) {
             clientesModel.setValorKg(clienteDTO.getValorKg());
         } else {
@@ -42,9 +41,7 @@ public class ClienteService {
 
         ClientesModel cliente = clienteRepository.save(clientesModel);
 
-        // REGRA: PEÇA
         if (clienteDTO.getTipoCliente() == TipoCliente.PECA) {
-
             clienteDTO.getPecas().forEach(p -> {
 
                 PecasModel peca = pecasRepository.findById(p.getPecaId())
@@ -60,6 +57,13 @@ public class ClienteService {
             });
         }
 
-        return cliente;
+        ClienteDTO response = new ClienteDTO();
+        response.setNome(cliente.getNome());
+        response.setEmail(cliente.getEmail());
+        response.setTelefone(cliente.getTelefone());
+        response.setTipoCliente(cliente.getTipoCliente());
+        response.setValorKg(cliente.getValorKg());
+
+        return response;
     }
 }

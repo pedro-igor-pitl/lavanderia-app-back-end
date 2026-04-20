@@ -2,6 +2,9 @@ package com.luxlav.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -24,7 +27,8 @@ public class ClientesModel {
     private String telefone;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "tipo_cliente_enum_novo")
     private TipoCliente tipoCliente;
 
     @Column(precision = 10, scale = 2)
