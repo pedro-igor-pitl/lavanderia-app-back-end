@@ -4,6 +4,8 @@ package com.luxlav.backend.controller;
 import com.luxlav.backend.dto.ClienteDTO;
 import com.luxlav.backend.dto.ClienteResumoDTO;
 import com.luxlav.backend.dto.PecasDTO;
+import com.luxlav.backend.model.ClientesModel;
+import com.luxlav.backend.model.PecasModel;
 import com.luxlav.backend.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -35,4 +38,11 @@ public class ClienteController {
 
     @GetMapping("/listarClientesResumido")
     public List<ClienteResumoDTO> listarClientesResumido() {return clienteService.listarClientesResumidos();}
+
+    @PatchMapping("/atualizarStatus/{id}")
+    public ResponseEntity<ClientesModel> atualizarStatus(@PathVariable UUID id, @RequestBody ClienteDTO dto) {
+        return clienteService.atualizarStatus(id, dto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

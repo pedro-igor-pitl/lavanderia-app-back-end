@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,14 @@ public class ClienteService {
 
     @Autowired
     private PecasRepository pecasRepository;
+
+    public Optional<ClientesModel> atualizarStatus(UUID id, ClienteDTO clienteDTO) {
+        return clienteRepository.findById(id)
+                .map(clientesModel -> {
+                    clientesModel.setAtivo(clienteDTO.getAtivo());
+                    return clienteRepository.save(clientesModel);
+                });
+    }
 
     public List<ClienteResumoDTO> listarClientesResumidos() {
         return clienteRepository.findAll().stream()
