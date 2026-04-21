@@ -2,6 +2,7 @@ package com.luxlav.backend.controller;
 
 
 import com.luxlav.backend.dto.ClienteDTO;
+import com.luxlav.backend.dto.ClienteResumoDTO;
 import com.luxlav.backend.dto.PecasDTO;
 import com.luxlav.backend.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,4 +32,7 @@ public class ClienteController {
     public List<PecasDTO> listar(@RequestParam(required = false) Boolean ativo) {
         return clienteService.listarPecas(ativo);
     }
+
+    @GetMapping("/listarClientesResumido")
+    public List<ClienteResumoDTO> listarClientesResumido() {return clienteService.listarClientesResumidos();}
 }

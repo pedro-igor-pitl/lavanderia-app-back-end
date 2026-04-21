@@ -1,6 +1,7 @@
 package com.luxlav.backend.service;
 
 import com.luxlav.backend.dto.ClienteDTO;
+import com.luxlav.backend.dto.ClienteResumoDTO;
 import com.luxlav.backend.dto.PecasDTO;
 import com.luxlav.backend.model.ClientePecaModel;
 import com.luxlav.backend.model.ClientesModel;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,16 @@ public class ClienteService {
 
     @Autowired
     private PecasRepository pecasRepository;
+
+    public List<ClienteResumoDTO> listarClientesResumidos() {
+        return clienteRepository.findAll().stream()
+                .map(p -> new ClienteResumoDTO(
+                        p.getId(),
+                        p.getNome(),
+                        p.getAtivo() != null && p.getAtivo()
+                ))
+                .toList();
+    }
 
     public List<PecasDTO> listarPecas(Boolean ativo) {
 
