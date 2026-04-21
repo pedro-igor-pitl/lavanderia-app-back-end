@@ -1,6 +1,7 @@
 package com.luxlav.backend.service;
 
 import com.luxlav.backend.dto.ClienteDTO;
+import com.luxlav.backend.dto.PecasDTO;
 import com.luxlav.backend.model.ClientePecaModel;
 import com.luxlav.backend.model.ClientesModel;
 import com.luxlav.backend.model.PecasModel;
@@ -10,6 +11,9 @@ import com.luxlav.backend.repository.ClienteRepository;
 import com.luxlav.backend.repository.PecasRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ClienteService {
@@ -22,6 +26,25 @@ public class ClienteService {
 
     @Autowired
     private PecasRepository pecasRepository;
+
+    public List<PecasDTO> listarPecas(Boolean ativo) {
+
+        List<PecasModel> pecas;
+
+        if (ativo == null) {
+            pecas = pecasRepository.findAll();
+        } else {
+            pecas = pecasRepository.findByAtivo(ativo);
+        }
+
+        return pecas.stream()
+                .map(p -> new PecasDTO(
+                        p.getId(),
+                        p.getNome(),
+                        p.getAtivo() != null && p.getAtivo()
+                ))
+                .toList();
+    }
 
     public ClienteDTO criarCliente(ClienteDTO clienteDTO) {
 
