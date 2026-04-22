@@ -14,13 +14,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClientePecaDTO {
-    private UUID id;
+
+    @NotNull
+    private UUID pecaId;
+
+    @NotNull
+    private String nome;
 
     @NotNull
     @DecimalMin("0.00")
     @Digits(integer = 8, fraction = 2)
     private BigDecimal precoCliente;
-
-    @NotNull
-    private UUID pecaId;
 }

@@ -1,5 +1,4 @@
 package com.luxlav.backend.model;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,6 +21,9 @@ public class ClientePecaModel {
     @ManyToOne
     @JoinColumn(name = "peca_id", nullable = false)
     private PecasModel pecasModel;
+
+    @Column(nullable = false)
+    private Boolean ativo = true;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal precoCliente;

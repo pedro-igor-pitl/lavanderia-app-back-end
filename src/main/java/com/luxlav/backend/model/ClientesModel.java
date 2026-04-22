@@ -1,9 +1,9 @@
 package com.luxlav.backend.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import lombok.Data;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "clientes")
+@FilterDef(name = "ativoFilter", parameters = @ParamDef(name = "ativo", type = Boolean.class))
+@Filter(name = "ativoFilter", condition = "ativo = :ativo")
 public class ClientesModel {
 
     @Id
@@ -36,4 +38,7 @@ public class ClientesModel {
 
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    @OneToMany(mappedBy = "clientesModel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private java.util.List<ClientePecaModel> pecas;
 }

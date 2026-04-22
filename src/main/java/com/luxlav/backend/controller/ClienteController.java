@@ -25,6 +25,13 @@ public class ClienteController {
     @Autowired
     private ClienteService clienteService;
 
+    @GetMapping("/buscarClienteCompleto/{id}")
+    public ResponseEntity<ClienteDTO> buscarClientePorId(@PathVariable UUID id) {
+        return clienteService.buscarClientePorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/cadastrar")
     public ResponseEntity<ClienteDTO> cadastrar(@RequestBody ClienteDTO clienteDTO) {
         ClienteDTO clienteCriado = clienteService.criarCliente(clienteDTO);

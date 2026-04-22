@@ -1,6 +1,7 @@
 package com.luxlav.backend.service;
 
 import com.luxlav.backend.dto.ClienteDTO;
+import com.luxlav.backend.dto.ClientePecaDTO;
 import com.luxlav.backend.dto.ClienteResumoDTO;
 import com.luxlav.backend.dto.PecasDTO;
 import com.luxlav.backend.model.ClientePecaModel;
@@ -10,6 +11,7 @@ import com.luxlav.backend.model.TipoCliente;
 import com.luxlav.backend.repository.ClientePecaRepository;
 import com.luxlav.backend.repository.ClienteRepository;
 import com.luxlav.backend.repository.PecasRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +32,74 @@ public class ClienteService {
     @Autowired
     private PecasRepository pecasRepository;
 
-    public Optional<ClientesModel> atualizarStatus(UUID id, ClienteDTO clienteDTO) {
+    public Optional<ClientesModel> atualizarCliente(UUID id, ClienteDTO dto) {
         return clienteRepository.findById(id)
-                .map(clientesModel -> {
-                    clientesModel.setAtivo(clienteDTO.getAtivo());
-                    return clienteRepository.save(clientesModel);
+                .map(cliente -> {
+
+                    cliente.setNome(dto.getNome());
+                    cliente.setEmail(dto.getEmail());
+                    cliente.setTelefone(dto.getTelefone());
+                    cliente.setTipoCliente(dto.getTipoCliente());
+
+                    if (dto.getTipoCliente() == TipoCliente.PESO) {
+                        cliente.setValorKg(dto.getValorKg());
+
+                        // limpa relação antiga
+                        if (cliente.getPecas() != null) {
+                            cliente.getPecas().clear();
+                        }
+
+                    } else if (dto.getTipoCliente() == TipoCliente.PECA) {
+                        cliente.setValorKg(null);
+
+                        // aqui NÃO é correto setar null direto em relação JPA
+                        // você precisa tratar na tabela cliente_peca
+                    }
+
+                    return clienteRepository.save(cliente);
+                });
+    }
+
+    public Optional<ClienteDTO> buscarClientePorId(UUID id) {
+        return clienteRepository.findById(id)
+                .map(c -> {
+
+                    List<ClientePecaDTO> pecas = null;
+
+                    if (c.getTipoCliente() == TipoCliente.PECA) {
+                        pecas = c.getPecas().stream()
+                                .map(p -> new ClientePecaDTO(
+                                        p.getPecasModel().getId(),
+                                        p.getPecasModel().getNome(),
+                                        p.getPrecoCliente()
+                                ))
+                                .toList();
+                    }
+
+                    return new ClienteDTO(
+                            c.getId(),
+                            c.getNome(),
+                            c.getEmail(),
+                            c.getTelefone(),
+                            c.getTipoCliente(),
+                            c.getValorKg(),
+                            c.getAtivo(),
+                            pecas
+                    );
+                });
+    }
+
+    @Transactional
+    public Optional<ClientesModel> atualizarStatus(UUID id, ClienteDTO dto) {
+        return clienteRepository.findById(id)
+                .map(cliente -> {
+
+                    cliente.setAtivo(dto.getAtivo());
+                    clienteRepository.save(cliente);
+
+                    clientePecaRepository.atualizarStatusPorCliente(id, dto.getAtivo());
+
+                    return cliente;
                 });
     }
 
