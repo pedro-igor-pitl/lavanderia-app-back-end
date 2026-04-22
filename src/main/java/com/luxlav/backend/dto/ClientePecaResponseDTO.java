@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientePecaDTO {
+public class ClientePecaResponseDTO {
 
     @NotNull
     private UUID pecaId;

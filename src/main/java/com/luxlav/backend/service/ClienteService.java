@@ -1,9 +1,7 @@
 package com.luxlav.backend.service;
 
-import com.luxlav.backend.dto.ClienteDTO;
-import com.luxlav.backend.dto.ClientePecaDTO;
-import com.luxlav.backend.dto.ClienteResumoDTO;
-import com.luxlav.backend.dto.PecasDTO;
+import com.luxlav.backend.dto.*;
+import com.luxlav.backend.exception.ClienteInativoException;
 import com.luxlav.backend.model.ClientePecaModel;
 import com.luxlav.backend.model.ClientesModel;
 import com.luxlav.backend.model.PecasModel;
@@ -16,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,9 +31,15 @@ public class ClienteService {
     @Autowired
     private PecasRepository pecasRepository;
 
-    public Optional<ClientesModel> atualizarCliente(UUID id, ClienteDTO dto) {
+    @Transactional
+    public Optional<ClienteDTO> atualizarCliente(UUID id, ClienteRequestDTO dto) {
+
         return clienteRepository.findById(id)
                 .map(cliente -> {
+
+                    if (!cliente.getAtivo()) {
+                        throw new ClienteInativoException("Cliente inativo não pode ser alterado");
+                    }
 
                     cliente.setNome(dto.getNome());
                     cliente.setEmail(dto.getEmail());
@@ -42,33 +47,116 @@ public class ClienteService {
                     cliente.setTipoCliente(dto.getTipoCliente());
 
                     if (dto.getTipoCliente() == TipoCliente.PESO) {
+
                         cliente.setValorKg(dto.getValorKg());
 
-                        // limpa relação antiga
                         if (cliente.getPecas() != null) {
                             cliente.getPecas().clear();
                         }
 
                     } else if (dto.getTipoCliente() == TipoCliente.PECA) {
+
                         cliente.setValorKg(null);
 
-                        // aqui NÃO é correto setar null direto em relação JPA
-                        // você precisa tratar na tabela cliente_peca
+                        atualizarPecasCliente(
+                                cliente.getId(),
+                                dto.getPecas() != null ? dto.getPecas() : List.of()
+                        );
                     }
 
-                    return clienteRepository.save(cliente);
+                    ClientesModel salvo = clienteRepository.save(cliente);
+
+                    // 🔥 CONVERSÃO AQUI
+                    return converterParaDTO(salvo);
                 });
+    }
+
+    private ClienteDTO converterParaDTO(ClientesModel c) {
+
+        List<ClientePecaResponseDTO> pecas = null;
+
+        if (c.getTipoCliente() == TipoCliente.PECA && c.getPecas() != null) {
+            pecas = c.getPecas().stream()
+                    .filter(ClientePecaModel::getAtivo)
+                    .map(p -> new ClientePecaResponseDTO(
+                            p.getPecasModel().getId(),
+                            p.getPecasModel().getNome(),
+                            p.getPrecoCliente()
+                    ))
+                    .toList();
+        }
+
+        return new ClienteDTO(
+                c.getId(),
+                c.getNome(),
+                c.getEmail(),
+                c.getTelefone(),
+                c.getTipoCliente(),
+                c.getValorKg(),
+                c.getAtivo(),
+                pecas
+        );
+    }
+
+    public void atualizarPecasCliente(UUID clienteId, List<UUID> novasPecasIds) {
+
+        List<ClientePecaModel> atuais =
+                clientePecaRepository.listarPorCliente(clienteId);
+
+        // mapa das relações atuais por peça
+        Map<UUID, ClientePecaModel> atuaisMap = atuais.stream()
+                .collect(Collectors.toMap(
+                        cp -> cp.getPecasModel().getId(),
+                        cp -> cp
+                ));
+
+        // 1. inativa o que não veio
+        for (ClientePecaModel cp : atuais) {
+            if (!novasPecasIds.contains(cp.getPecasModel().getId())) {
+                cp.setAtivo(false);
+            }
+        }
+
+        // 2. ativa ou cria o que veio
+        for (UUID pecaId : novasPecasIds) {
+
+            ClientePecaModel existente = atuaisMap.get(pecaId);
+
+            if (existente != null) {
+                // já existe → só reativa
+                existente.setAtivo(true);
+
+            } else {
+                // não existe → cria nova relação
+                ClientePecaModel novo = new ClientePecaModel();
+
+                ClientesModel cliente = new ClientesModel();
+                cliente.setId(clienteId);
+
+                PecasModel peca = new PecasModel();
+                peca.setId(pecaId);
+
+                novo.setClientesModel(cliente);
+                novo.setPecasModel(peca);
+                novo.setAtivo(true);
+
+                atuais.add(novo);
+            }
+        }
+
+        clientePecaRepository.saveAll(atuais);
     }
 
     public Optional<ClienteDTO> buscarClientePorId(UUID id) {
         return clienteRepository.findById(id)
                 .map(c -> {
 
-                    List<ClientePecaDTO> pecas = null;
+                    List<ClientePecaResponseDTO> pecas = null;
 
                     if (c.getTipoCliente() == TipoCliente.PECA) {
                         pecas = c.getPecas().stream()
-                                .map(p -> new ClientePecaDTO(
+                                .filter(ClientePecaModel::getAtivo)
+                                .map(p -> new ClientePecaResponseDTO(
                                         p.getPecasModel().getId(),
                                         p.getPecasModel().getNome(),
                                         p.getPrecoCliente()

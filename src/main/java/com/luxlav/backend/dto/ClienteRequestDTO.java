@@ -12,14 +12,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class ClienteDTO {
-    private UUID id;
+public class ClienteRequestDTO {
     private String nome;
     private String email;
     private String telefone;
     private TipoCliente tipoCliente;
     private BigDecimal valorKg;
-    private Boolean ativo;
 
-    private List<ClientePecaResponseDTO> pecas;
+    private List<UUID> pecas;
 }

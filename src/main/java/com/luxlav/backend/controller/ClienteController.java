@@ -2,6 +2,7 @@ package com.luxlav.backend.controller;
 
 
 import com.luxlav.backend.dto.ClienteDTO;
+import com.luxlav.backend.dto.ClienteRequestDTO;
 import com.luxlav.backend.dto.ClienteResumoDTO;
 import com.luxlav.backend.dto.PecasDTO;
 import com.luxlav.backend.model.ClientesModel;
@@ -24,6 +25,17 @@ public class ClienteController {
 
     @Autowired
     private ClienteService clienteService;
+
+    @PutMapping("/atualizarCliente/{id}")
+    public ResponseEntity<ClienteDTO> atualizarCliente(
+            @PathVariable UUID id,
+            @RequestBody ClienteRequestDTO request
+    ) {
+
+        return clienteService.atualizarCliente(id, request)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @GetMapping("/buscarClienteCompleto/{id}")
     public ResponseEntity<ClienteDTO> buscarClientePorId(@PathVariable UUID id) {
