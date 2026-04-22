@@ -66,7 +66,6 @@ public class ClienteService {
 
                     ClientesModel salvo = clienteRepository.save(cliente);
 
-                    // 🔥 CONVERSÃO AQUI
                     return converterParaDTO(salvo);
                 });
     }
@@ -149,6 +148,7 @@ public class ClienteService {
 
     public Optional<ClienteDTO> buscarClientePorId(UUID id) {
         return clienteRepository.findById(id)
+                .filter(ClientesModel::getAtivo) // 👈 AQUI está o "if"
                 .map(c -> {
 
                     List<ClientePecaResponseDTO> pecas = null;
