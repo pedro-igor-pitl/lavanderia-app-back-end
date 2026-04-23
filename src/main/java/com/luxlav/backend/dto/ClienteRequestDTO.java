@@ -19,5 +19,5 @@ public class ClienteRequestDTO {
     private TipoCliente tipoCliente;
     private BigDecimal valorKg;
 
-    private List<UUID> pecas;
+    private List<ClientePecaRequestDTO> pecas;
 }

@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PecasRepository extends JpaRepository<PecasModel, UUID> {
-    List<PecasModel> findByAtivo(Boolean ativo);
+    List<PecasModel> findByAtivoTrue();
 }

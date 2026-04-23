@@ -50,7 +50,7 @@ public class ClienteController {
 
     @GetMapping("/listarPecasAtivas")
     public List<PecasDTO> listar(@RequestParam(required = false) Boolean ativo) {
-        return clienteService.listarPecas(ativo);
+        return clienteService.listarPecasAtivas();
     }
 
     @GetMapping("/listarClientesResumido")

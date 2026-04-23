@@ -2,10 +2,7 @@ package com.luxlav.backend.service;
 
 import com.luxlav.backend.dto.*;
 import com.luxlav.backend.exception.ClienteInativoException;
-import com.luxlav.backend.model.ClientePecaModel;
-import com.luxlav.backend.model.ClientesModel;
-import com.luxlav.backend.model.PecasModel;
-import com.luxlav.backend.model.TipoCliente;
+import com.luxlav.backend.model.*;
 import com.luxlav.backend.repository.ClientePecaRepository;
 import com.luxlav.backend.repository.ClienteRepository;
 import com.luxlav.backend.repository.PecasRepository;
@@ -13,10 +10,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +26,9 @@ public class ClienteService {
     @Autowired
     private PecasRepository pecasRepository;
 
+    // =========================
+    // UPDATE CLIENTE
+    // =========================
     @Transactional
     public Optional<ClienteDTO> atualizarCliente(UUID id, ClienteRequestDTO dto) {
 
@@ -58,10 +56,10 @@ public class ClienteService {
 
                         cliente.setValorKg(null);
 
-                        atualizarPecasCliente(
-                                cliente.getId(),
-                                dto.getPecas() != null ? dto.getPecas() : List.of()
-                        );
+                        List<ClientePecaRequestDTO> pecas =
+                                dto.getPecas() != null ? dto.getPecas() : List.of();
+
+                        atualizarPecasCliente(cliente.getId(), pecas);
                     }
 
                     ClientesModel salvo = clienteRepository.save(cliente);
@@ -70,6 +68,9 @@ public class ClienteService {
                 });
     }
 
+    // =========================
+    // CONVERTER DTO
+    // =========================
     private ClienteDTO converterParaDTO(ClientesModel c) {
 
         List<ClientePecaResponseDTO> pecas = null;
@@ -97,36 +98,49 @@ public class ClienteService {
         );
     }
 
-    public void atualizarPecasCliente(UUID clienteId, List<UUID> novasPecasIds) {
+    // =========================
+    // UPDATE PEÇAS DO CLIENTE
+    // =========================
+    public void atualizarPecasCliente(
+            UUID clienteId,
+            List<ClientePecaRequestDTO> novasPecas
+    ) {
 
         List<ClientePecaModel> atuais =
                 clientePecaRepository.listarPorCliente(clienteId);
 
-        // mapa das relações atuais por peça
         Map<UUID, ClientePecaModel> atuaisMap = atuais.stream()
                 .collect(Collectors.toMap(
                         cp -> cp.getPecasModel().getId(),
                         cp -> cp
                 ));
 
-        // 1. inativa o que não veio
+        Set<UUID> novasIds = novasPecas.stream()
+                .map(ClientePecaRequestDTO::getPecaId)
+                .collect(Collectors.toSet());
+
+        // 1. inativa removidos
         for (ClientePecaModel cp : atuais) {
-            if (!novasPecasIds.contains(cp.getPecasModel().getId())) {
+            if (!novasIds.contains(cp.getPecasModel().getId())) {
                 cp.setAtivo(false);
             }
         }
 
-        // 2. ativa ou cria o que veio
-        for (UUID pecaId : novasPecasIds) {
+        // 2. ativa ou cria novos
+        for (ClientePecaRequestDTO dto : novasPecas) {
+
+            UUID pecaId = dto.getPecaId();
+            BigDecimal preco = dto.getPrecoCliente();
 
             ClientePecaModel existente = atuaisMap.get(pecaId);
 
             if (existente != null) {
-                // já existe → só reativa
+
                 existente.setAtivo(true);
+                existente.setPrecoCliente(preco);
 
             } else {
-                // não existe → cria nova relação
+
                 ClientePecaModel novo = new ClientePecaModel();
 
                 ClientesModel cliente = new ClientesModel();
@@ -137,6 +151,7 @@ public class ClienteService {
 
                 novo.setClientesModel(cliente);
                 novo.setPecasModel(peca);
+                novo.setPrecoCliente(preco);
                 novo.setAtivo(true);
 
                 atuais.add(novo);
@@ -146,9 +161,12 @@ public class ClienteService {
         clientePecaRepository.saveAll(atuais);
     }
 
+    // =========================
+    // BUSCAR CLIENTE
+    // =========================
     public Optional<ClienteDTO> buscarClientePorId(UUID id) {
         return clienteRepository.findById(id)
-                .filter(ClientesModel::getAtivo) // 👈 AQUI está o "if"
+                .filter(ClientesModel::getAtivo)
                 .map(c -> {
 
                     List<ClientePecaResponseDTO> pecas = null;
@@ -177,6 +195,9 @@ public class ClienteService {
                 });
     }
 
+    // =========================
+    // STATUS
+    // =========================
     @Transactional
     public Optional<ClientesModel> atualizarStatus(UUID id, ClienteDTO dto) {
         return clienteRepository.findById(id)
@@ -191,6 +212,9 @@ public class ClienteService {
                 });
     }
 
+    // =========================
+    // LISTA RESUMO
+    // =========================
     public List<ClienteResumoDTO> listarClientesResumidos() {
         return clienteRepository.findAll().stream()
                 .map(p -> new ClienteResumoDTO(
@@ -201,65 +225,66 @@ public class ClienteService {
                 .toList();
     }
 
-    public List<PecasDTO> listarPecas(Boolean ativo) {
+    // =========================
+    // LISTAR PEÇAS
+    // =========================
+    public List<PecasDTO> listarPecasAtivas() {
 
-        List<PecasModel> pecas;
-
-        if (ativo == null) {
-            pecas = pecasRepository.findAll();
-        } else {
-            pecas = pecasRepository.findByAtivo(ativo);
-        }
-
-        return pecas.stream()
+        return pecasRepository.findByAtivoTrue()
+                .stream()
                 .map(p -> new PecasDTO(
                         p.getId(),
                         p.getNome(),
-                        p.getAtivo() != null && p.getAtivo()
+                        true
                 ))
                 .toList();
     }
 
+    // =========================
+    // CRIAR CLIENTE
+    // =========================
     public ClienteDTO criarCliente(ClienteDTO clienteDTO) {
 
-        ClientesModel clientesModel = new ClientesModel();
+        ClientesModel cliente = new ClientesModel();
 
-        clientesModel.setNome(clienteDTO.getNome());
-        clientesModel.setEmail(clienteDTO.getEmail());
-        clientesModel.setTelefone(clienteDTO.getTelefone());
-        clientesModel.setTipoCliente(clienteDTO.getTipoCliente());
-        clientesModel.setAtivo(true);
+        cliente.setNome(clienteDTO.getNome());
+        cliente.setEmail(clienteDTO.getEmail());
+        cliente.setTelefone(clienteDTO.getTelefone());
+        cliente.setTipoCliente(clienteDTO.getTipoCliente());
+        cliente.setAtivo(true);
 
         if (clienteDTO.getTipoCliente() == TipoCliente.PESO) {
-            clientesModel.setValorKg(clienteDTO.getValorKg());
+            cliente.setValorKg(clienteDTO.getValorKg());
         } else {
-            clientesModel.setValorKg(null);
+            cliente.setValorKg(null);
         }
 
-        ClientesModel cliente = clienteRepository.save(clientesModel);
+        ClientesModel salvo = clienteRepository.save(cliente);
 
         if (clienteDTO.getTipoCliente() == TipoCliente.PECA) {
+
             clienteDTO.getPecas().forEach(p -> {
 
                 PecasModel peca = pecasRepository.findById(p.getPecaId())
                         .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
 
-                ClientePecaModel clientePecaModel = new ClientePecaModel();
+                ClientePecaModel cp = new ClientePecaModel();
 
-                clientePecaModel.setClientesModel(cliente);
-                clientePecaModel.setPecasModel(peca);
-                clientePecaModel.setPrecoCliente(p.getPrecoCliente());
+                cp.setClientesModel(salvo);
+                cp.setPecasModel(peca);
+                cp.setPrecoCliente(p.getPrecoCliente());
+                cp.setAtivo(true);
 
-                clientePecaRepository.save(clientePecaModel);
+                clientePecaRepository.save(cp);
             });
         }
 
         ClienteDTO response = new ClienteDTO();
-        response.setNome(cliente.getNome());
-        response.setEmail(cliente.getEmail());
-        response.setTelefone(cliente.getTelefone());
-        response.setTipoCliente(cliente.getTipoCliente());
-        response.setValorKg(cliente.getValorKg());
+        response.setNome(salvo.getNome());
+        response.setEmail(salvo.getEmail());
+        response.setTelefone(salvo.getTelefone());
+        response.setTipoCliente(salvo.getTipoCliente());
+        response.setValorKg(salvo.getValorKg());
 
         return response;
     }
