@@ -54,7 +54,15 @@ public class ClienteController {
     }
 
     @GetMapping("/listarClientesResumido")
-    public List<ClienteResumoDTO> listarClientesResumido() {return clienteService.listarClientesResumidos();}
+    public List<ClienteResumoDTO> listarClientesResumido(
+            @RequestParam(required = false) Boolean ativo) {
+
+        if (ativo != null) {
+            return clienteService.listarClientesResumidos(ativo);
+        }
+
+        return clienteService.listarClientesResumidos();
+    }
 
     @PatchMapping("/atualizarStatus/{id}")
     public ResponseEntity<ClientesModel> atualizarStatus(@PathVariable UUID id, @RequestBody ClienteDTO dto) {

@@ -225,6 +225,21 @@ public class ClienteService {
                 .toList();
     }
 
+
+    public List<ClienteResumoDTO> listarClientesResumidos(Boolean ativo) {
+        List<ClientesModel> clientes = (ativo == null)
+                ? clienteRepository.findAll()
+                : clienteRepository.findByAtivo(ativo);
+
+        return clientes.stream()
+                .map(p -> new ClienteResumoDTO(
+                        p.getId(),
+                        p.getNome(),
+                        p.getAtivo() != null && p.getAtivo()
+                ))
+                .toList();
+    }
+
     // =========================
     // LISTAR PEÇAS
     // =========================
