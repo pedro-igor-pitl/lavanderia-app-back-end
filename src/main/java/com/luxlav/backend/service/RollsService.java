@@ -3,17 +3,13 @@ package com.luxlav.backend.service;
 import com.luxlav.backend.dto.ClienteDTO;
 import com.luxlav.backend.dto.RollsDTO;
 import com.luxlav.backend.dto.RollsItensDTO;
-import com.luxlav.backend.model.ClientesModel;
-import com.luxlav.backend.model.RollsItensModel;
-import com.luxlav.backend.model.RollsModel;
-import com.luxlav.backend.model.TipoCliente;
-import com.luxlav.backend.repository.ClienteRepository;
-import com.luxlav.backend.repository.RollsItensRepository;
-import com.luxlav.backend.repository.RollsRepository;
+import com.luxlav.backend.model.*;
+import com.luxlav.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,10 +21,16 @@ public class RollsService {
     private RollsRepository rollsRepository;
 
     @Autowired
+    private PecasRepository pecasRepository;
+
+    @Autowired
     private ClienteRepository clienteRepository;
 
     @Autowired
     private RollsItensRepository rollsItensRepository;
+
+    @Autowired
+    private ClientePecaRepository clientePecaRepository;
 
     @Transactional
     public RollsDTO criarRoll(RollsDTO rollsDTO) {
@@ -49,8 +51,12 @@ public class RollsService {
 
         if (tipo == TipoCliente.PESO) {
 
-            if (rollsDTO.getPeso() == null) {
-                throw new RuntimeException("Peso obrigatório");
+            if (rollsDTO.getPeso() == null || rollsDTO.getPeso().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Peso deve ser maior que zero");
+            }
+
+            if (cliente.getValorKg() == null) {
+                throw new RuntimeException("Cliente não possui preço por kg definido");
             }
 
             RollsItensModel item = new RollsItensModel();
@@ -58,6 +64,7 @@ public class RollsService {
             item.setPeso(rollsDTO.getPeso());
             item.setQuantidade(null);
             item.setPeca(null);
+            item.setPrecoUnitario(cliente.getValorKg());
 
             rollsItensRepository.save(item);
         } else if (tipo == TipoCliente.PECA) {
@@ -73,11 +80,19 @@ public class RollsService {
                     continue;
                 }
 
+                PecasModel peca = pecasRepository.findById(itensDTO.getPeca_id())
+                        .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
+
                 RollsItensModel item = new RollsItensModel();
                 item.setRoll(salvo);
+                item.setPeca(peca); // ✔ agora correto
                 item.setQuantidade(itensDTO.getQuantidade());
                 item.setPeso(null);
-                item.setPrecoUnitario(itensDTO.getPreco_unitario());
+                ClientePecaModel clientePeca = clientePecaRepository
+                        .findByClienteAndPeca(cliente, peca)
+                        .orElseThrow(() -> new RuntimeException("Preço não definido para essa peça"));
+
+                item.setPrecoUnitario(clientePeca.getPrecoCliente());
 
                 itens.add(item);
             }
