@@ -26,6 +26,8 @@ public class RollsItensModel {
 
     private BigDecimal peso;
 
+    private BigDecimal valorKg;
+
     @Column(name = "preco_unitario", precision = 10, scale = 2, nullable = false)
     private BigDecimal precoUnitario;
 }

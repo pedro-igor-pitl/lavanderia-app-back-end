@@ -66,6 +66,13 @@ public class RollsService {
                 .dataColeta(roll.getDataColeta())
                 .clienteId(roll.getCliente().getId())
                 .clienteNome(roll.getCliente().getNome())
+                .valorKg(
+                        itens.stream()
+                                .map(RollsItensModel::getPrecoUnitario)
+                                .filter(Objects::nonNull)
+                                .findFirst()
+                                .orElse(BigDecimal.ZERO)
+                )
                 .peso(
                         itens.stream()
                                 .map(item -> item.getPeso())

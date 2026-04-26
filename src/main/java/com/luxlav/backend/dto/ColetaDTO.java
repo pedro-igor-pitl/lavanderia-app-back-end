@@ -24,5 +24,7 @@ public class ColetaDTO {
 
     private BigDecimal peso;
 
+    private BigDecimal valorKg;
+
     private List<ColetaItemDTO> itens;
 }
