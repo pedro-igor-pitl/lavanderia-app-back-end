@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "rolls")
 public class RollsModel {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

@@ -18,8 +18,8 @@ public class RollsItensModel {
     @JoinColumn(name = "roll_id", nullable = false)
     private RollsModel roll;
 
-    @ManyToOne
-    @JoinColumn(name = "peca_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "peca_id", nullable = false)
     private PecasModel peca;
 
     private Integer quantidade;

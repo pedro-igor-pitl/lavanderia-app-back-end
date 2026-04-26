@@ -3,6 +3,7 @@ package com.luxlav.backend.repository;
 import com.luxlav.backend.model.ClientePecaModel;
 import com.luxlav.backend.model.ClientesModel;
 import com.luxlav.backend.model.PecasModel;
+import com.luxlav.backend.model.RollsItensModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

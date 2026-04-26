@@ -1,8 +1,6 @@
 package com.luxlav.backend.service;
 
-import com.luxlav.backend.dto.ClienteDTO;
-import com.luxlav.backend.dto.RollsDTO;
-import com.luxlav.backend.dto.RollsItensDTO;
+import com.luxlav.backend.dto.*;
 import com.luxlav.backend.model.*;
 import com.luxlav.backend.repository.*;
 import jakarta.transaction.Transactional;
@@ -12,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -31,6 +30,41 @@ public class RollsService {
 
     @Autowired
     private ClientePecaRepository clientePecaRepository;
+
+    public ColetaDTO buscarRoll(UUID clienteId, String codigoManual) {
+
+        RollsModel roll = rollsRepository
+                .findByCodigoManualAndCliente_Id(codigoManual, clienteId)
+                .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
+
+        List<RollsItensModel> itens = rollsItensRepository.findByRollId(roll.getId());
+
+        return ColetaDTO.builder()
+                .id(roll.getId())
+                .codigoManual(roll.getCodigoManual())
+                .dataColeta(roll.getDataColeta())
+                .clienteId(roll.getCliente().getId())
+                .clienteNome(roll.getCliente().getNome())
+                .peso(
+                        itens.stream()
+                                .map(item -> item.getPeso())
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                )
+                .itens(
+                        itens.stream()
+                                .filter(item -> item.getPeca() != null)
+                                .map(item ->
+                                        ColetaItemDTO.builder()
+                                                .pecaId(item.getPeca().getId())
+                                                .nomePeca(item.getPeca().getNome())
+                                                .quantidade(item.getQuantidade())
+                                                .precoUnitario(item.getPrecoUnitario())
+                                                .build()
+                                ).toList()
+                )
+                .build();
+    }
 
     @Transactional
     public RollsDTO criarRoll(RollsDTO rollsDTO) {
@@ -85,7 +119,7 @@ public class RollsService {
 
                 RollsItensModel item = new RollsItensModel();
                 item.setRoll(salvo);
-                item.setPeca(peca); // ✔ agora correto
+                item.setPeca(peca);
                 item.setQuantidade(itensDTO.getQuantidade());
                 item.setPeso(null);
                 ClientePecaModel clientePeca = clientePecaRepository
