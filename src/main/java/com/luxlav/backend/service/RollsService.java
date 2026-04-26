@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +31,26 @@ public class RollsService {
 
     @Autowired
     private ClientePecaRepository clientePecaRepository;
+
+    public List<ColetaResumoDTO> buscarPorIntervaloRoll(
+            UUID clienteId,
+            LocalDate inicio,
+            LocalDate fim) {
+
+        List<RollsModel> rolls = rollsRepository
+                .findByCliente_IdAndDataColetaBetween(clienteId, inicio, fim);
+
+        return rolls.stream()
+                .map(roll -> ColetaResumoDTO.builder()
+                        .id(roll.getId())
+                        .clienteId(clienteId)
+                        .codigoManual(roll.getCodigoManual())
+                        .dataColeta(roll.getDataColeta())
+                        .clienteNome(roll.getCliente().getNome())
+                        .build()
+                )
+                .toList();
+    }
 
     public ColetaDTO buscarRoll(UUID clienteId, String codigoManual) {
 
