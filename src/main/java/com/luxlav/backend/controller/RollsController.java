@@ -20,6 +20,16 @@ public class RollsController {
     @Autowired
     private RollsService rollsService;
 
+    @PutMapping("/atualizarColetaPorRoll")
+    public ResponseEntity<RollsDTO> atualizarColetaPorRoll(
+            @RequestParam UUID clienteId,
+            @RequestParam String codigoManual,
+            @RequestBody RollsDTO dto) {
+
+        RollsDTO atualizado = rollsService.atualizarRoll(clienteId, codigoManual, dto);
+        return ResponseEntity.ok(atualizado);
+    }
+
     @PostMapping("/cadastrarRoll")
     public ResponseEntity<RollsDTO> cadastrar(@RequestBody RollsDTO rollsDTO) {
         RollsDTO rollCriado = rollsService.criarRoll(rollsDTO);

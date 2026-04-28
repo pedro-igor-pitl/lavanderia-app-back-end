@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RollsService {
@@ -31,6 +29,64 @@ public class RollsService {
 
     @Autowired
     private ClientePecaRepository clientePecaRepository;
+
+    @Transactional
+    public RollsDTO atualizarRoll(UUID clienteId, String codigoManual, RollsDTO dto) {
+
+        RollsModel roll = rollsRepository
+                .findByCodigoManualAndCliente_Id(codigoManual, clienteId)
+                .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
+
+        List<RollsItensModel> atuais =
+                rollsItensRepository.findByRollId(roll.getId());
+
+        Map<UUID, RollsItensModel> atuaisMap = atuais.stream()
+                .filter(item -> item.getPeca() != null)
+                .collect(Collectors.toMap(
+                        item -> item.getPeca().getId(),
+                        item -> item
+                ));
+
+        Set<UUID> novosIds = dto.getItens().stream()
+                .map(RollsItensDTO::getPeca_id)
+                .collect(Collectors.toSet());
+
+        for (RollsItensModel item : atuais) {
+            if (item.getPeca() != null &&
+                    !novosIds.contains(item.getPeca().getId())) {
+
+                item.setAtivo(false);
+            }
+        }
+
+        for (RollsItensDTO novo : dto.getItens()) {
+
+            RollsItensModel existente = atuaisMap.get(novo.getPeca_id());
+
+            if (existente != null) {
+                existente.setAtivo(true);
+                existente.setQuantidade(novo.getQuantidade());
+                existente.setPrecoUnitario(novo.getPreco_unitario());
+            } else {
+
+                PecasModel peca = pecasRepository.findById(novo.getPeca_id())
+                        .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
+
+                RollsItensModel novoItem = new RollsItensModel();
+                novoItem.setRoll(roll);
+                novoItem.setPeca(peca);
+                novoItem.setQuantidade(novo.getQuantidade());
+                novoItem.setPrecoUnitario(novo.getPreco_unitario());
+                novoItem.setAtivo(true);
+
+                atuais.add(novoItem);
+            }
+        }
+
+        rollsItensRepository.saveAll(atuais);
+
+        return RollsDTO.fromModel(roll);
+    }
 
     public List<ColetaResumoDTO> buscarPorIntervaloRoll(
             UUID clienteId,
@@ -58,7 +114,8 @@ public class RollsService {
                 .findByCodigoManualAndCliente_Id(codigoManual, clienteId)
                 .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
 
-        List<RollsItensModel> itens = rollsItensRepository.findByRollId(roll.getId());
+        List<RollsItensModel> itens = rollsItensRepository
+                .findByRollIdAndAtivoTrue(roll.getId());
 
         return ColetaDTO.builder()
                 .id(roll.getId())

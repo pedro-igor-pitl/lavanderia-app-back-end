@@ -30,4 +30,7 @@ public class RollsItensModel {
 
     @Column(name = "preco_unitario", precision = 10, scale = 2, nullable = false)
     private BigDecimal precoUnitario;
+
+    @Column(nullable = false)
+    private Boolean ativo = true;
 }

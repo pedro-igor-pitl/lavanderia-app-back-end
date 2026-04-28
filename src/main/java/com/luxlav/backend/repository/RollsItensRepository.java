@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface RollsItensRepository extends JpaRepository <RollsItensModel, UUID> {
     List<RollsItensModel> findByRollId(UUID rollId);
+    List<RollsItensModel> findByRollIdAndAtivoTrue(UUID rollId);
 }
