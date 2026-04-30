@@ -9,8 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RollsRepository extends JpaRepository<RollsModel, UUID> {
-    Optional<RollsModel> findByCodigoManualAndCliente_Id(
-            String codigoManual,
+    Optional<RollsModel> findByIdAndCliente_Id(
+            UUID id,
             UUID clienteId
     );
 

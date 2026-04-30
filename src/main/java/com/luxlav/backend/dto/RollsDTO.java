@@ -17,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class RollsDTO {
 
+    private UUID id;
     private String codigo_manual;
     private UUID cliente_id;
     private LocalDate data_coleta;

@@ -21,12 +21,8 @@ public class RollsController {
     private RollsService rollsService;
 
     @PutMapping("/atualizarColetaPorRoll")
-    public ResponseEntity<RollsDTO> atualizarColetaPorRoll(
-            @RequestParam UUID clienteId,
-            @RequestParam String codigoManual,
-            @RequestBody RollsDTO dto) {
-
-        RollsDTO atualizado = rollsService.atualizarRoll(clienteId, codigoManual, dto);
+    public ResponseEntity<RollsDTO> atualizar(@RequestBody RollsDTO dto) {
+        RollsDTO atualizado = rollsService.atualizarRoll(dto);
         return ResponseEntity.ok(atualizado);
     }
 
@@ -36,12 +32,12 @@ public class RollsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(rollCriado);
     }
 
-    @GetMapping("/vizualizarColetaPorRoll")
+    @GetMapping("/visualizarColetaPorRoll")
     public ResponseEntity<ColetaDTO> visualizarColeta(
             @RequestParam UUID clienteId,
-            @RequestParam  String codigoManual
+            @RequestParam UUID rollId
     ) {
-        ColetaDTO coleta = rollsService.buscarRoll(clienteId, codigoManual);
+        ColetaDTO coleta = rollsService.buscarRoll(clienteId, rollId);
         return ResponseEntity.ok(coleta);
     }
 

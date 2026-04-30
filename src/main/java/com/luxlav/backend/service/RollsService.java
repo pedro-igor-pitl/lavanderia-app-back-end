@@ -31,11 +31,16 @@ public class RollsService {
     private ClientePecaRepository clientePecaRepository;
 
     @Transactional
-    public RollsDTO atualizarRoll(UUID clienteId, String codigoManual, RollsDTO dto) {
+    public RollsDTO atualizarRoll(RollsDTO dto) {
 
         RollsModel roll = rollsRepository
-                .findByCodigoManualAndCliente_Id(codigoManual, clienteId)
+                .findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
+
+        roll.setCodigoManual(dto.getCodigo_manual());
+        roll.setDataColeta(dto.getData_coleta());
+
+        rollsRepository.save(roll);
 
         List<RollsItensModel> atuais =
                 rollsItensRepository.findByRollId(roll.getId());
@@ -46,6 +51,10 @@ public class RollsService {
                         item -> item.getPeca().getId(),
                         item -> item
                 ));
+
+        if (dto.getItens() == null) {
+            dto.setItens(new ArrayList<>());
+        }
 
         Set<UUID> novosIds = dto.getItens().stream()
                 .map(RollsItensDTO::getPeca_id)
@@ -83,6 +92,15 @@ public class RollsService {
             }
         }
 
+        if (dto.getPeso() != null) {
+            for (RollsItensModel item : atuais) {
+                if (item.getPeca() == null) {
+                    item.setPeso(dto.getPeso());
+                    item.setPrecoUnitario(item.getValorKg());
+                }
+            }
+        }
+
         rollsItensRepository.saveAll(atuais);
 
         return RollsDTO.fromModel(roll);
@@ -108,14 +126,14 @@ public class RollsService {
                 .toList();
     }
 
-    public ColetaDTO buscarRoll(UUID clienteId, String codigoManual) {
+    @Transactional
+    public ColetaDTO buscarRoll(UUID clienteId, UUID rollId) {
 
         RollsModel roll = rollsRepository
-                .findByCodigoManualAndCliente_Id(codigoManual, clienteId)
+                .findByIdAndCliente_Id(rollId, clienteId)
                 .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
 
-        List<RollsItensModel> itens = rollsItensRepository
-                .findByRollIdAndAtivoTrue(roll.getId());
+        List<RollsItensModel> itens = roll.getItens();
 
         return ColetaDTO.builder()
                 .id(roll.getId())
