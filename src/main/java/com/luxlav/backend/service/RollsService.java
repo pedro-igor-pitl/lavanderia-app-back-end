@@ -156,7 +156,10 @@ public class RollsService {
                 )
                 .itens(
                         itens.stream()
-                                .filter(item -> item.getPeca() != null)
+                                .filter(item ->
+                                        item.getPeca() != null &&
+                                                Boolean.TRUE.equals(item.getAtivo())
+                                )
                                 .map(item ->
                                         ColetaItemDTO.builder()
                                                 .pecaId(item.getPeca().getId())
