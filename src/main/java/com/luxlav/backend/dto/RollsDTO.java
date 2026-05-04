@@ -27,6 +27,7 @@ public class RollsDTO {
     public static RollsDTO fromModel(RollsModel model) {
         RollsDTO dto = new RollsDTO();
 
+        dto.setId(model.getId());
         dto.setCodigo_manual(model.getCodigoManual());
         dto.setCliente_id(model.getCliente().getId());
         dto.setData_coleta(model.getDataColeta());
