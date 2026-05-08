@@ -31,6 +31,17 @@ public class RollsService {
     private ClientePecaRepository clientePecaRepository;
 
     @Transactional
+    public RollsModel atualizarStatus(UUID id, StatusRollDTO dto) {
+
+        RollsModel roll = rollsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Roll não encontrado"));
+
+        roll.setAtivo(dto.getAtivo());
+
+        return rollsRepository.save(roll);
+    }
+
+    @Transactional
     public RollsDTO atualizarRoll(RollsDTO dto) {
 
         RollsModel roll = rollsRepository

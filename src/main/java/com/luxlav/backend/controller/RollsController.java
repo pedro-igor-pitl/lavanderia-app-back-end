@@ -1,8 +1,8 @@
 package com.luxlav.backend.controller;
 
-import com.luxlav.backend.dto.ColetaDTO;
-import com.luxlav.backend.dto.ColetaResumoDTO;
-import com.luxlav.backend.dto.RollsDTO;
+import com.luxlav.backend.dto.*;
+import com.luxlav.backend.model.ClientesModel;
+import com.luxlav.backend.model.RollsModel;
 import com.luxlav.backend.service.RollsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +19,21 @@ import java.util.UUID;
 public class RollsController {
     @Autowired
     private RollsService rollsService;
+
+    @PatchMapping("/atualizarStatus/{id}")
+    public ResponseEntity<StatusRollResponseDTO> atualizarStatus(
+            @PathVariable UUID id,
+            @RequestBody StatusRollDTO dto) {
+
+        RollsModel roll = rollsService.atualizarStatus(id, dto);
+
+        StatusRollResponseDTO response = new StatusRollResponseDTO(
+                roll.getId(),
+                roll.getAtivo()
+        );
+
+        return ResponseEntity.ok(response);
+    }
 
     @PutMapping("/atualizarColetaPorRoll")
     public ResponseEntity<RollsDTO> atualizar(@RequestBody RollsDTO dto) {
