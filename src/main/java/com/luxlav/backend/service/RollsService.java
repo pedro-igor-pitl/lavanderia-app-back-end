@@ -121,6 +121,7 @@ public class RollsService {
                         .codigoManual(roll.getCodigoManual())
                         .dataColeta(roll.getDataColeta())
                         .clienteNome(roll.getCliente().getNome())
+                        .ativo(roll.getAtivo())
                         .build()
                 )
                 .toList();

@@ -14,4 +14,5 @@ public class ColetaResumoDTO {
     private LocalDate dataColeta;
     private String clienteNome;
     private UUID clienteId;
+    private Boolean ativo;
 }
