@@ -28,6 +28,9 @@ public class RollsModel {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @Column(nullable = false)
+    private String tipo_cliente_historico;
+
     @OneToMany(mappedBy = "roll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<RollsItensModel> itens;
 }

@@ -10,13 +10,13 @@ public interface FinanceiroDTO {
     String getClienteNome();
     String getEmail();
     String getTelefone();
-    String getTipoCliente();
     Boolean getClienteAtivo();
 
     UUID getRollId();
     String getCodigoManual();
     LocalDate getDataColeta();
     Boolean getRollAtivo();
+    String getTipoClienteHistorico();
     BigDecimal getRollValorKg();
 
     UUID getRollItemId();

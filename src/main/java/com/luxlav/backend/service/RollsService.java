@@ -211,6 +211,7 @@ public class RollsService {
         rollsModel.setCodigoManual(rollsDTO.getCodigo_manual());
         rollsModel.setCliente(cliente);
         rollsModel.setDataColeta(rollsDTO.getData_coleta());
+        rollsModel.setTipo_cliente_historico(cliente.getTipoCliente().name());
         rollsModel.setAtivo(true);
 
         RollsModel salvo = rollsRepository.save(rollsModel);
